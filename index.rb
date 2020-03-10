@@ -193,7 +193,7 @@ class Tile
 end
 
 game = Game.new(5, 800,800, 10, 10)
-game.shuffle(0)
+game.shuffle(190)
 
 update do
   game.timerStep
