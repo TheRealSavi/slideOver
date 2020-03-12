@@ -144,38 +144,50 @@ class Game
   end
 
   def draggingFrom(from)
+    calculateDrag(from)
+
     if @timerEnable == false
       startTimer()
       @moves = 0
     end
+  end
 
-    @draggedFrom = Struct.new(:x,:y,:col,:row).new(from.x, from.y, 0, 0)
+  def calculateDrag(pos)
+    containingTile = nil
     @grid.each do |tile|
-      if tile.model.contains?(from.x, from.y)
-        @draggedFrom.row = tile.row
-        @draggedFrom.col = tile.col
+      if tile.model.contains?(pos.x, pos.y)
+        containingTile = tile
+        @draggedFrom = Struct.new(:col, :row).new(tile.col, tile.row)
       end
     end
+    @distancesNeeded = Struct.new(:left, :right, :up, :down).new(0,0,0,0)
+    @distancesNeeded.left = containingTile.model.x
+    @distancesNeeded.up = containingTile.model.y
+    @distancesNeeded.right = containingTile.model.x + (@width / @size)
+    @distancesNeeded.down = containingTile.model.y + (@width / @size)
   end
 
   def draggedTo(now)
-    if @draggedFrom.x - (@width / @size) >= now.x || @draggedFrom.x + (@width / @size) <= now.x
-      if now.x > @draggedFrom.x
-        moveCol(@draggedFrom.col, 1)
-      elsif now.x < @draggedFrom.x
-        moveCol(@draggedFrom.col,-1)
-      end
+    if now.x > @distancesNeeded.right
+      moveCol(@draggedFrom.col, 1)
       draggingFrom(now)
-    elsif @draggedFrom.y - (@width / @size) >= now.y || @draggedFrom.y + (@width / @size) <= now.y
-      if now.y > @draggedFrom.y
-        moveRow(@draggedFrom.row, 1)
-      elsif now.y < @draggedFrom.y
-        moveRow(@draggedFrom.row,-1)
-      end
+    end
+
+    if now.x < @distancesNeeded.left
+      moveCol(@draggedFrom.col,-1)
+      draggingFrom(now)
+    end
+
+    if now.y < @distancesNeeded.up
+      moveRow(@draggedFrom.row,-1)
+      draggingFrom(now)
+    end
+
+    if now.y > @distancesNeeded.down
+      moveRow(@draggedFrom.row, 1)
       draggingFrom(now)
     end
   end
-
 end
 
 class Tile
