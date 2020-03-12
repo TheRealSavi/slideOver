@@ -1,4 +1,5 @@
 require 'ruby2d'
+require 'savio'
 set width: 1100, height:1000, title: "Slide Over by Savi, concept by CaryKH", fullscreen: false
 
 class Game
@@ -6,6 +7,8 @@ class Game
   def initialize(size, width, height, x, y)
     @x = x
     @y = y
+
+    @shuffled = false
 
     @width = width
     @height = height
@@ -97,20 +100,26 @@ class Game
   end
 
   def shuffle(shuffles = 100)
-    shuffles.times do
+    if @shuffled == false
+      @shuffled = true
+      Thread.new {
+      shuffles.times do
+        sleep(0.015)
 
-      tile = @grid.sample(1)[0]
-      direction = [-1,1].sample(1)[0]
-      colorrow = ['col','row'].sample(1)[0]
+        tile = @grid.sample(1)[0]
+        direction = [-1,1].sample(1)[0]
+        colorrow = ['col','row'].sample(1)[0]
 
-      if colorrow == 'col'
-        moveCol(tile.col, direction)
-      elsif colorrow == 'row'
-        moveRow(tile.row, direction)
+        if colorrow == 'col'
+          moveCol(tile.col, direction)
+        elsif colorrow == 'row'
+          moveRow(tile.row, direction)
+        end
+
       end
-
+      @moves = 0
+    }
     end
-    @moves = 0
   end
 
   def moveRow(row, direction)
@@ -160,11 +169,13 @@ class Game
         @draggedFrom = Struct.new(:col, :row).new(tile.col, tile.row)
       end
     end
-    @distancesNeeded = Struct.new(:left, :right, :up, :down).new(0,0,0,0)
-    @distancesNeeded.left = containingTile.model.x
-    @distancesNeeded.up = containingTile.model.y
-    @distancesNeeded.right = containingTile.model.x + (@width / @size)
-    @distancesNeeded.down = containingTile.model.y + (@width / @size)
+    if containingTile
+      @distancesNeeded = Struct.new(:left, :right, :up, :down).new(0,0,0,0)
+      @distancesNeeded.left = containingTile.model.x
+      @distancesNeeded.up = containingTile.model.y
+      @distancesNeeded.right = containingTile.model.x + (@width / @size)
+      @distancesNeeded.down = containingTile.model.y + (@width / @size)
+    end
   end
 
   def draggedTo(now)
@@ -205,7 +216,12 @@ class Tile
 end
 
 game = Game.new(5, 800,800, 10, 10)
-game.shuffle(190)
+
+shuffleButton = Button.new(x:10, y:900, size:20, displayName: "shuffle", type:'clicker')
+
+shuffleButton.onClick do
+  game.shuffle(50)
+end
 
 update do
   game.timerStep
